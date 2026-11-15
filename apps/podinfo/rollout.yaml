@@ -1,14 +1,29 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: podinfo
   labels:
     app: podinfo
 spec:
-  replicas: 3 
+  replicas: 3
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app: podinfo
+  strategy:
+    canary:
+      stableService: podinfo-stable
+      canaryService: podinfo-canary
+      trafficRouting:
+        traefik:
+          weightedTraefikServiceName: podinfo-weighted
+      steps:
+        - setWeight: 20
+        - pause: {}            # waits for manual promote
+        - setWeight: 50
+        - pause: {duration: 30s}
+        - setWeight: 80
+        - pause: {duration: 30s}
   template:
     metadata:
       labels:

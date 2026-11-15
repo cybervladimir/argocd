@@ -1,0 +1,25 @@
+apiVersion: traefik.io/v1alpha1
+kind: TraefikService
+metadata:
+  name: podinfo-weighted
+spec:
+  weighted:
+    services:
+      - name: podinfo-stable
+        port: 80
+      - name: podinfo-canary
+        port: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: podinfo
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`podinfo.local`)
+      kind: Rule
+      services:
+        - name: podinfo-weighted
+          kind: TraefikService
